@@ -34,19 +34,20 @@ var (
 	}
 
 	renderOpts struct {
-		assetDir            string
-		caCertificatePath   string
-		caPrivateKeyPath    string
-		etcdCAPath          string
-		etcdCertificatePath string
-		etcdPrivateKeyPath  string
-		etcdServers         string
-		apiServers          string
-		altNames            string
-		podCIDR             string
-		serviceCIDR         string
-		cloudProvider       string
-		networkProvider     string
+		assetDir             string
+		caCertificatePath    string
+		caPrivateKeyPath     string
+		etcdCAPath           string
+		etcdCertificatePath  string
+		etcdPrivateKeyPath   string
+		etcdServers          string
+		apiServers           string
+		controlPlaneEndpoint string
+		altNames             string
+		podCIDR              string
+		serviceCIDR          string
+		cloudProvider        string
+		networkProvider      string
 	}
 
 	imageVersions = asset.DefaultImages
@@ -61,7 +62,7 @@ func init() {
 	cmdRender.Flags().StringVar(&renderOpts.etcdCertificatePath, "etcd-certificate-path", "", "Path to an existing certificate that will be used for TLS-enabled communication between the apiserver and etcd. Must be used in conjunction with --etcd-ca-path and --etcd-private-key-path, and must have etcd configured to use TLS with matching secrets.")
 	cmdRender.Flags().StringVar(&renderOpts.etcdPrivateKeyPath, "etcd-private-key-path", "", "Path to an existing private key that will be used for TLS-enabled communication between the apiserver and etcd. Must be used in conjunction with --etcd-ca-path and --etcd-certificate-path, and must have etcd configured to use TLS with matching secrets.")
 	cmdRender.Flags().StringVar(&renderOpts.etcdServers, "etcd-servers", defaultEtcdServers, "List of etcd servers URLs including host:port, comma separated")
-	cmdRender.Flags().StringVar(&renderOpts.apiServers, "api-servers", "https://127.0.0.1:6443", "List of API server URLs including host:port, comma seprated")
+	cmdRender.Flags().StringVar(&renderOpts.controlPlaneEndpoint, "endpoint", "", "The control plane endpoint")
 	cmdRender.Flags().StringVar(&renderOpts.altNames, "api-server-alt-names", "", "List of SANs to use in api-server certificate. Example: 'IP=127.0.0.1,IP=127.0.0.2,DNS=localhost'. If empty, SANs will be extracted from the --api-servers flag.")
 	cmdRender.Flags().StringVar(&renderOpts.podCIDR, "pod-cidr", "10.2.0.0/16", "The CIDR range of cluster pods.")
 	cmdRender.Flags().StringVar(&renderOpts.serviceCIDR, "service-cidr", "10.3.0.0/24", "The CIDR range of cluster services.")
@@ -99,8 +100,8 @@ func validateRenderOpts(cmd *cobra.Command, args []string) error {
 	if renderOpts.etcdServers == "" {
 		return errors.New("Missing required flag: --etcd-servers")
 	}
-	if renderOpts.apiServers == "" {
-		return errors.New("Missing required flag: --api-servers")
+	if renderOpts.controlPlaneEndpoint == "" {
+		return errors.New("Missing required flag: --endpoint")
 	}
 	if renderOpts.networkProvider != asset.NetworkFlannel && renderOpts.networkProvider != asset.NetworkCalico && renderOpts.networkProvider != asset.NetworkCanal {
 		return errors.New("Must specify --network-provider flannel or experimental-calico or experimental-canal")
@@ -109,18 +110,21 @@ func validateRenderOpts(cmd *cobra.Command, args []string) error {
 }
 
 func flagsToAssetConfig() (c *asset.Config, err error) {
-	apiServers, err := parseURLs(renderOpts.apiServers)
+	endpoint := renderOpts.controlPlaneEndpoint
+	parsed, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
 	}
+
+	endpointAltNames := altNamesFromURLs([]*url.URL{parsed})
+
 	altNames, err := parseAltNames(renderOpts.altNames)
 	if err != nil {
 		return nil, err
 	}
-	if altNames == nil {
-		// Fall back to parsing from api-server list
-		altNames = altNamesFromURLs(apiServers)
-	}
+
+	altNames.DNSNames = append(altNames.DNSNames, endpointAltNames.DNSNames...)
+	altNames.IPs = append(altNames.IPs, endpointAltNames.IPs...)
 
 	var caCert *x509.Certificate
 	var caPrivKey *rsa.PrivateKey
@@ -188,23 +192,28 @@ func flagsToAssetConfig() (c *asset.Config, err error) {
 		fmt.Printf("You have selected a non-default service CIDR %s - be sure your kubelet service file uses --cluster-dns=%s\n", serviceNet.String(), dnsServiceIP.String())
 	}
 
+	ep, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	return &asset.Config{
-		EtcdCACert:      etcdCACert,
-		EtcdClientCert:  etcdClientCert,
-		EtcdClientKey:   etcdClientKey,
-		EtcdServers:     etcdServers,
-		EtcdUseTLS:      etcdUseTLS,
-		CACert:          caCert,
-		CAPrivKey:       caPrivKey,
-		APIServers:      apiServers,
-		AltNames:        altNames,
-		PodCIDR:         podNet,
-		ServiceCIDR:     serviceNet,
-		APIServiceIP:    apiServiceIP,
-		DNSServiceIP:    dnsServiceIP,
-		CloudProvider:   renderOpts.cloudProvider,
-		NetworkProvider: renderOpts.networkProvider,
-		Images:          imageVersions,
+		EtcdCACert:           etcdCACert,
+		EtcdClientCert:       etcdClientCert,
+		EtcdClientKey:        etcdClientKey,
+		EtcdServers:          etcdServers,
+		EtcdUseTLS:           etcdUseTLS,
+		CACert:               caCert,
+		CAPrivKey:            caPrivKey,
+		ControlPlaneEndpoint: ep,
+		AltNames:             altNames,
+		PodCIDR:              podNet,
+		ServiceCIDR:          serviceNet,
+		APIServiceIP:         apiServiceIP,
+		DNSServiceIP:         dnsServiceIP,
+		CloudProvider:        renderOpts.cloudProvider,
+		NetworkProvider:      renderOpts.networkProvider,
+		Images:               imageVersions,
 	}, nil
 }
 

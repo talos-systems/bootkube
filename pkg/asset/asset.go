@@ -113,7 +113,8 @@ type Config struct {
 	EtcdClientKey          *rsa.PrivateKey
 	EtcdServers            []*url.URL
 	EtcdUseTLS             bool
-	APIServers             []*url.URL
+	ControlPlaneEndpoint   *url.URL
+	LocalAPIServerPort     int
 	CACert                 *x509.Certificate
 	CAPrivKey              *rsa.PrivateKey
 	AltNames               *tlsutil.AltNames
@@ -125,6 +126,8 @@ type Config struct {
 	NetworkProvider        string
 	BootstrapSecretsSubdir string
 	Images                 ImageVersions
+	BootstrapTokenID       string
+	BootstrapTokenSecret   string
 }
 
 // ImageVersions holds all the images (and their versions) that are rendered into the templates.
@@ -157,14 +160,14 @@ func NewDefaultAssets(conf Config) (Assets, error) {
 		var err error
 		conf.CAPrivKey, conf.CACert, err = newCACert()
 		if err != nil {
-			return Assets{}, err
+			return Assets{}, fmt.Errorf("failed to create CA: %+v", err)
 		}
 	}
 
 	// TLS assets
 	tlsAssets, err := newTLSAssets(conf.CACert, conf.CAPrivKey, *conf.AltNames)
 	if err != nil {
-		return Assets{}, err
+		return Assets{}, fmt.Errorf("failed to create TLS asset: %+v", err)
 	}
 	as = append(as, tlsAssets...)
 
@@ -172,28 +175,27 @@ func NewDefaultAssets(conf Config) (Assets, error) {
 	if conf.EtcdUseTLS {
 		etcdTLSAssets, err := newEtcdTLSAssets(conf.EtcdCACert, conf.EtcdClientCert, conf.EtcdClientKey, conf.CACert, conf.CAPrivKey, conf.EtcdServers)
 		if err != nil {
-			return Assets{}, err
+			return Assets{}, fmt.Errorf("failed to create etcd asset: %+v", err)
 		}
 		as = append(as, etcdTLSAssets...)
 	}
 
 	kubeConfigAssets, err := newKubeConfigAssets(as, conf)
 	if err != nil {
-		return Assets{}, err
+		return Assets{}, fmt.Errorf("failed to create kubeconfig assets: %+v", err)
 	}
 	as = append(as, kubeConfigAssets...)
 
-	// K8S APIServer secret
 	apiSecret, err := newAPIServerSecretAsset(as, conf.EtcdUseTLS)
 	if err != nil {
-		return Assets{}, err
+		return Assets{}, fmt.Errorf("failed to create API server assets: %+v", err)
 	}
 	as = append(as, apiSecret)
 
 	// K8S ControllerManager secret
 	cmSecret, err := newControllerManagerSecretAsset(as)
 	if err != nil {
-		return Assets{}, err
+		return Assets{}, fmt.Errorf("failed to create controller manager assets: %+v", err)
 	}
 	as = append(as, cmSecret)
 

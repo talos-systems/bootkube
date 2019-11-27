@@ -172,11 +172,12 @@ spec:
         - --insecure-port=0
         - --kubelet-client-certificate=/etc/kubernetes/secrets/apiserver-kubelet-client.crt
         - --kubelet-client-key=/etc/kubernetes/secrets/apiserver-kubelet-client.key
-        - --secure-port={{ (index .APIServers 0).Port }}
+        - --secure-port={{ .LocalAPIServerPort }}
         - --service-account-key-file=/etc/kubernetes/secrets/service-account.pub
         - --service-cluster-ip-range={{ .ServiceCIDR }}
         - --tls-cert-file=/etc/kubernetes/secrets/apiserver.crt
         - --tls-private-key-file=/etc/kubernetes/secrets/apiserver.key
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
         env:
         - name: POD_IP
           valueFrom:
@@ -199,7 +200,7 @@ spec:
       volumes:
       - name: ssl-certs-host
         hostPath:
-          path: /usr/share/ca-certificates
+          path: /etc/ssl/certs
       - name: secrets
         secret:
           secretName: kube-apiserver
@@ -246,7 +247,7 @@ spec:
     - --etcd-servers={{ range $i, $e := .EtcdServers }}{{ if $i }},{{end}}{{ $e }}{{end}}
     - --kubelet-client-certificate=/etc/kubernetes/secrets/apiserver-kubelet-client.crt
     - --kubelet-client-key=/etc/kubernetes/secrets/apiserver-kubelet-client.key
-    - --secure-port={{ (index .APIServers 0).Port }}
+    - --secure-port={{ .LocalAPIServerPort }}
     - --service-account-key-file=/etc/kubernetes/secrets/service-account.pub
     - --service-cluster-ip-range={{ .ServiceCIDR }}
     - --cloud-provider={{ .CloudProvider }}
@@ -271,7 +272,7 @@ spec:
       path: /etc/kubernetes/{{ .BootstrapSecretsSubdir }}
   - name: ssl-certs-host
     hostPath:
-      path: /usr/share/ca-certificates
+      path: /etc/ssl/certs
 `)
 
 var CheckpointerTemplate = []byte(`apiVersion: apps/v1
@@ -303,6 +304,7 @@ spec:
         - --lock-file=/var/run/lock/pod-checkpointer.lock
         - --kubeconfig=/etc/checkpointer/kubeconfig
         - --checkpoint-grace-period=5m
+        - --container-runtime-endpoint=/containerd/containerd/containerd.sock
         env:
         - name: NODE_NAME
           valueFrom:
@@ -324,6 +326,8 @@ spec:
           name: etc-kubernetes
         - mountPath: /var/run
           name: var-run
+        - mountPath: /containerd
+          name: run
       serviceAccountName: pod-checkpointer
       hostNetwork: true
       nodeSelector:
@@ -343,6 +347,9 @@ spec:
       - name: var-run
         hostPath:
           path: /var/run
+      - name: run
+        hostPath:
+          path: /run
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -495,7 +502,7 @@ spec:
           secretName: kube-controller-manager
       - name: ssl-host
         hostPath:
-          path: /usr/share/ca-certificates
+          path: /etc/ssl/certs
       dnsPolicy: ClusterFirstWithHostNet
 `)
 
@@ -557,7 +564,7 @@ spec:
       path: /etc/kubernetes/{{ .BootstrapSecretsSubdir }}
   - name: ssl-host
     hostPath:
-      path: /usr/share/ca-certificates
+      path: /etc/ssl/certs
 `)
 
 var ControllerManagerDisruptionTemplate = []byte(`apiVersion: policy/v1beta1
@@ -700,6 +707,7 @@ spec:
         - --hostname-override=$(NODE_NAME)
         - --kubeconfig=/etc/kubernetes/kubeconfig
         - --proxy-mode=iptables
+        - --conntrack-max-per-core=0
         env:
           - name: NODE_NAME
             valueFrom:
@@ -730,7 +738,7 @@ spec:
           path: /lib/modules
       - name: ssl-certs-host
         hostPath:
-          path: /usr/share/ca-certificates
+          path: /etc/ssl/certs
       - name: kubeconfig
         configMap:
           name: kubeconfig-in-cluster
@@ -1137,7 +1145,7 @@ spec:
             path: /run
         - name: cni
           hostPath:
-            path: /etc/kubernetes/cni/net.d
+            path: /etc/cni/net.d
         - name: flannel-cfg
           configMap:
             name: kube-flannel-cfg
@@ -1289,7 +1297,7 @@ spec:
                   name: calico-config
                   key: cni_network_config
             - name: CNI_NET_DIR
-              value: "/etc/kubernetes/cni/net.d"
+              value: "/etc/cni/net.d"
             - name: KUBERNETES_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -1312,7 +1320,7 @@ spec:
             path: /opt/cni/bin
         - name: cni-net-dir
           hostPath:
-            path: /etc/kubernetes/cni/net.d
+            path: /etc/cni/net.d
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -1410,7 +1418,7 @@ spec:
                   name: calico-config
                   key: cni_network_config
             - name: CNI_NET_DIR
-              value: "/etc/kubernetes/cni/net.d"
+              value: "/etc/cni/net.d"
             - name: KUBERNETES_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -1435,7 +1443,7 @@ spec:
             path: /opt/cni/bin
         - name: cni-net-dir
           hostPath:
-            path: /etc/kubernetes/cni/net.d
+            path: /etc/cni/net.d
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
