@@ -106,6 +106,25 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 `)
 
+var KubeSystemEncryptionConfigTemplate = []byte(`apiVersion: v1
+kind: EncryptionConfig
+resources:
+- resources:
+  - secrets
+  providers:
+  - aescbc:
+      keys:
+      - name: key1
+        secret: {{ .AESCBCEncryptionSecret }}
+  - identity: {}
+`)
+
+var KubeSystemAuditPolicyTemplate = []byte(`apiVersion: audit.k8s.io/v1beta1
+kind: Policy
+rules:
+- level: Metadata
+`)
+
 var KubeSystemSARoleBindingTemplate = []byte(`apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -147,7 +166,7 @@ spec:
         command:
         - /hyperkube
         - kube-apiserver
-        - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeClaimResize,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,Priority,NodeRestriction
+        - --enable-admission-plugins=PodSecurityPolicy,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeClaimResize,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,Priority,NodeRestriction
         - --advertise-address=$(POD_IP)
         - --allow-privileged=true
         - --anonymous-auth=false
@@ -163,6 +182,14 @@ spec:
         - --proxy-client-key-file=/etc/kubernetes/secrets/front-proxy-client.key
         - --cloud-provider={{ .CloudProvider }}
         - --enable-bootstrap-token-auth=true
+        - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
+        - --encryption-provider-config=/etc/kubernetes/secrets/encryptionconfig.yaml
+        - --audit-policy-file=/etc/kubernetes/secrets/auditpolicy.yaml
+        - --audit-log-path=-
+        - --audit-log-maxage=30
+        - --audit-log-maxbackup=3
+        - --audit-log-maxsize=50
+        - --profiling=false
 {{- if .EtcdUseTLS }}
         - --etcd-cafile=/etc/kubernetes/secrets/etcd-client-ca.crt
         - --etcd-certfile=/etc/kubernetes/secrets/etcd-client.crt
@@ -237,7 +264,7 @@ spec:
     - --requestheader-username-headers=X-Remote-User
     - --proxy-client-cert-file=/etc/kubernetes/secrets/front-proxy-client.crt
     - --proxy-client-key-file=/etc/kubernetes/secrets/front-proxy-client.key
-    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeClaimResize,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,Priority,NodeRestriction
+    - --enable-admission-plugins=PodSecurityPolicy,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeClaimResize,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,Priority,NodeRestriction
     - --enable-bootstrap-token-auth=true
 {{- if .EtcdUseTLS }}
     - --etcd-cafile=/etc/kubernetes/secrets/etcd-client-ca.crt
@@ -253,6 +280,14 @@ spec:
     - --cloud-provider={{ .CloudProvider }}
     - --tls-cert-file=/etc/kubernetes/secrets/apiserver.crt
     - --tls-private-key-file=/etc/kubernetes/secrets/apiserver.key
+    - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
+    - --encryption-provider-config=/etc/kubernetes/secrets/encryptionconfig.yaml
+    - --audit-policy-file=/etc/kubernetes/secrets/auditpolicy.yaml
+    - --audit-log-path=-
+    - --audit-log-maxage=30
+    - --audit-log-maxbackup=3
+    - --audit-log-maxsize=50
+    - --profiling=false
     env:
     - name: POD_IP
       valueFrom:
@@ -469,6 +504,7 @@ spec:
         - --leader-elect=true
         - --root-ca-file=/etc/kubernetes/secrets/ca.crt
         - --service-account-private-key-file=/etc/kubernetes/secrets/service-account.key
+        - --profiling=false
         livenessProbe:
           httpGet:
             path: /healthz
@@ -550,6 +586,7 @@ spec:
     - --leader-elect=true
     - --root-ca-file=/etc/kubernetes/secrets/ca.crt
     - --service-account-private-key-file=/etc/kubernetes/secrets/service-account.key
+    - --profiling=false
     volumeMounts:
     - name: secrets
       mountPath: /etc/kubernetes/secrets
@@ -623,6 +660,7 @@ spec:
         - ./hyperkube
         - kube-scheduler
         - --leader-elect=true
+        - --profiling=false
         livenessProbe:
           httpGet:
             path: /healthz
@@ -654,6 +692,7 @@ spec:
     - kube-scheduler
     - --kubeconfig=/etc/kubernetes/secrets/kubeconfig
     - --leader-elect=true
+    - --profiling=false
     volumeMounts:
     - name: secrets
       mountPath: /etc/kubernetes/secrets

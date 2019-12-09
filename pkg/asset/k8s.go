@@ -72,6 +72,8 @@ func newDynamicAssets(conf Config) Assets {
 		MustCreateAssetFromTemplate(AssetPathBootstrapAPIServer, internal.BootstrapAPIServerTemplate, conf),
 		MustCreateAssetFromTemplate(AssetPathBootstrapControllerManager, internal.BootstrapControllerManagerTemplate, conf),
 		MustCreateAssetFromTemplate(AssetPathBootstrapScheduler, internal.BootstrapSchedulerTemplate, conf),
+		MustCreateAssetFromTemplate(AssetPathEncryptionConfig, internal.KubeSystemEncryptionConfigTemplate, conf),
+		MustCreateAssetFromTemplate(AssetPathAuditPolicy, internal.KubeSystemAuditPolicyTemplate, conf),
 	}
 	switch conf.NetworkProvider {
 	case NetworkFlannel:
@@ -206,6 +208,8 @@ func newAPIServerSecretAsset(assets Assets, etcdUseTLS bool) (Asset, error) {
 		AssetPathKubeletClientCert,
 		AssetPathKubeletClientKey,
 		AssetPathCACert,
+		AssetPathEncryptionConfig,
+		AssetPathAuditPolicy,
 	}
 	if etcdUseTLS {
 		secretAssets = append(secretAssets, []string{
