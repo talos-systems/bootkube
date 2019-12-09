@@ -39,6 +39,8 @@ const (
 	AssetPathKubeletClientKey               = "tls/apiserver-kubelet-client.key"
 	AssetPathAdminKey                       = "tls/admin.key"
 	AssetPathAdminCert                      = "tls/admin.crt"
+	AssetPathEncryptionConfig               = "tls/encryptionconfig.yaml"
+	AssetPathAuditPolicy                    = "tls/auditpolicy.yaml"
 	AssetPathAdminKubeConfig                = "auth/kubeconfig"
 	AssetPathKubeletKubeConfig              = "auth/kubeconfig-kubelet"
 	AssetPathManifests                      = "manifests"
@@ -128,6 +130,7 @@ type Config struct {
 	Images                 ImageVersions
 	BootstrapTokenID       string
 	BootstrapTokenSecret   string
+	AESCBCEncryptionSecret string
 }
 
 // ImageVersions holds all the images (and their versions) that are rendered into the templates.
