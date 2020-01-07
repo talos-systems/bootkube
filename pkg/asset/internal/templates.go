@@ -452,7 +452,7 @@ subjects:
 `)
 
 var ControllerManagerTemplate = []byte(`apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: kube-controller-manager
   namespace: kube-system
@@ -460,7 +460,6 @@ metadata:
     tier: control-plane
     k8s-app: kube-controller-manager
 spec:
-  replicas: 2
   selector:
     matchLabels:
       tier: control-plane
@@ -618,7 +617,7 @@ spec:
 `)
 
 var SchedulerTemplate = []byte(`apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: kube-scheduler
   namespace: kube-system
@@ -626,7 +625,6 @@ metadata:
     tier: control-plane
     k8s-app: kube-scheduler
 spec:
-  replicas: 2
   selector:
     matchLabels:
       tier: control-plane
