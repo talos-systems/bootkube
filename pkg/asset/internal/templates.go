@@ -930,8 +930,6 @@ spec:
     metadata:
       labels:
         k8s-app: coredns
-      annotations:
-        seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
     spec:
       affinity:
         podAntiAffinity:
