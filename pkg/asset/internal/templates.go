@@ -914,7 +914,7 @@ metadata:
   name: coredns
   namespace: kube-system
   labels:
-    k8s-app: kube-dns
+    k8s-app: coredns
     kubernetes.io/name: "CoreDNS"
     kubernetes.io/cluster-service: "true"
 spec:
@@ -1016,18 +1016,18 @@ metadata:
 var CoreDNSSvcTemplate = []byte(`apiVersion: v1
 kind: Service
 metadata:
-  name: kube-dns
+  name: coredns
   namespace: kube-system
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "9153"
   labels:
-    k8s-app: kube-dns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: "CoreDNS"
 spec:
   selector:
-    k8s-app: kube-dns
+    k8s-app: coredns
   clusterIP: {{ .DNSServiceIP }}
   ports:
     - name: dns
