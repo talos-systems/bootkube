@@ -925,11 +925,11 @@ spec:
       maxUnavailable: 1
   selector:
     matchLabels:
-      k8s-app: coredns
+      k8s-app: kube-dns
   template:
     metadata:
       labels:
-        k8s-app: coredns
+        k8s-app: kube-dns
     spec:
       affinity:
         podAntiAffinity:
@@ -941,7 +941,7 @@ spec:
                 - key: k8s-app
                   operator: In
                   values:
-                  - coredns
+                  - kube-dns
               topologyKey: kubernetes.io/hostname
       serviceAccountName: coredns
       tolerations:
