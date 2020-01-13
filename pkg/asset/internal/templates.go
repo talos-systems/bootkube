@@ -470,22 +470,6 @@ spec:
         tier: control-plane
         k8s-app: kube-controller-manager
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: tier
-                  operator: In
-                  values:
-                  - control-plane
-                - key: k8s-app
-                  operator: In
-                  values:
-                  - kube-controller-manager
-              topologyKey: kubernetes.io/hostname
       containers:
       - name: kube-controller-manager
         image: {{ .Images.Hyperkube }}
@@ -635,22 +619,6 @@ spec:
         tier: control-plane
         k8s-app: kube-scheduler
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: tier
-                  operator: In
-                  values:
-                  - control-plane
-                - key: k8s-app
-                  operator: In
-                  values:
-                  - kube-scheduler
-              topologyKey: kubernetes.io/hostname
       containers:
       - name: kube-scheduler
         image: {{ .Images.Hyperkube }}
