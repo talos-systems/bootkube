@@ -161,6 +161,7 @@ func newKubeConfigAssets(assets Assets, conf Config) ([]Asset, error) {
 	}
 
 	cfg := struct {
+		Cluster              string
 		Server               string
 		CACert               string
 		AdminCert            string
@@ -168,6 +169,7 @@ func newKubeConfigAssets(assets Assets, conf Config) ([]Asset, error) {
 		BootstrapTokenID     string
 		BootstrapTokenSecret string
 	}{
+		Cluster:              conf.ClusterName,
 		Server:               conf.ControlPlaneEndpoint.String(),
 		CACert:               base64.StdEncoding.EncodeToString(caCert.Data),
 		AdminCert:            base64.StdEncoding.EncodeToString(adminCert.Data),
