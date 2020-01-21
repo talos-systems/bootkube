@@ -4,7 +4,7 @@ package internal
 var AdminKubeConfigTemplate = []byte(`apiVersion: v1
 kind: Config
 clusters:
-- name: local
+- name: {{ .Cluster }}
   cluster:
     server: {{ .Server }}
     certificate-authority-data: {{ .CACert }}
@@ -15,8 +15,10 @@ users:
     client-key-data: {{ .AdminKey }}
 contexts:
 - context:
-    cluster: local
+    cluster: {{ .Cluster }}
     user: admin
+  name: admin@{{ .Cluster }}
+current-context: admin@{{ .Cluster }}
 `)
 
 var KubeletKubeConfigTemplate = []byte(`apiVersion: v1
