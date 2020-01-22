@@ -37,7 +37,6 @@ type staticConfig struct {
 func newStaticAssets(imageVersions ImageVersions) Assets {
 	conf := staticConfig{Images: imageVersions}
 	assets := Assets{
-		MustCreateAssetFromTemplate(AssetPathScheduler, internal.SchedulerTemplate, conf),
 		MustCreateAssetFromTemplate(AssetPathSchedulerDisruption, internal.SchedulerDisruptionTemplate, conf),
 		MustCreateAssetFromTemplate(AssetPathControllerManagerDisruption, internal.ControllerManagerDisruptionTemplate, conf),
 		MustCreateAssetFromTemplate(AssetPathCoreDNSClusterRoleBinding, internal.CoreDNSClusterRoleBindingTemplate, conf),
@@ -60,6 +59,7 @@ func newStaticAssets(imageVersions ImageVersions) Assets {
 
 func newDynamicAssets(conf Config) Assets {
 	assets := Assets{
+		MustCreateAssetFromTemplate(AssetPathScheduler, internal.SchedulerTemplate, conf),
 		MustCreateAssetFromTemplate(AssetPathControllerManager, internal.ControllerManagerTemplate, conf),
 		MustCreateAssetFromTemplate(AssetPathControllerManagerSA, internal.ControllerManagerServiceAccount, conf),
 		MustCreateAssetFromTemplate(AssetPathControllerManagerRB, internal.ControllerManagerClusterRoleBinding, conf),

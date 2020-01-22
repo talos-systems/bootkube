@@ -110,28 +110,31 @@ var (
 // AssetConfig holds all configuration needed when generating
 // the default set of assets.
 type Config struct {
-	ClusterName            string
-	EtcdCACert             *x509.Certificate
-	EtcdClientCert         *x509.Certificate
-	EtcdClientKey          *rsa.PrivateKey
-	EtcdServers            []*url.URL
-	EtcdUseTLS             bool
-	ControlPlaneEndpoint   *url.URL
-	LocalAPIServerPort     int
-	CACert                 *x509.Certificate
-	CAPrivKey              *rsa.PrivateKey
-	AltNames               *tlsutil.AltNames
-	PodCIDR                *net.IPNet
-	ServiceCIDR            *net.IPNet
-	APIServiceIP           net.IP
-	DNSServiceIP           net.IP
-	CloudProvider          string
-	NetworkProvider        string
-	BootstrapSecretsSubdir string
-	Images                 ImageVersions
-	BootstrapTokenID       string
-	BootstrapTokenSecret   string
-	AESCBCEncryptionSecret string
+	ClusterName                string
+	APIServerExtraArgs         map[string]string
+	ControllerManagerExtraArgs map[string]string
+	SchedulerExtraArgs         map[string]string
+	EtcdCACert                 *x509.Certificate
+	EtcdClientCert             *x509.Certificate
+	EtcdClientKey              *rsa.PrivateKey
+	EtcdServers                []*url.URL
+	EtcdUseTLS                 bool
+	ControlPlaneEndpoint       *url.URL
+	LocalAPIServerPort         int
+	CACert                     *x509.Certificate
+	CAPrivKey                  *rsa.PrivateKey
+	AltNames                   *tlsutil.AltNames
+	PodCIDR                    *net.IPNet
+	ServiceCIDR                *net.IPNet
+	APIServiceIP               net.IP
+	DNSServiceIP               net.IP
+	CloudProvider              string
+	NetworkProvider            string
+	BootstrapSecretsSubdir     string
+	Images                     ImageVersions
+	BootstrapTokenID           string
+	BootstrapTokenSecret       string
+	AESCBCEncryptionSecret     string
 }
 
 // ImageVersions holds all the images (and their versions) that are rendered into the templates.
