@@ -207,6 +207,9 @@ spec:
         - --tls-cert-file=/etc/kubernetes/secrets/apiserver.crt
         - --tls-private-key-file=/etc/kubernetes/secrets/apiserver.key
         - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        {{- range $k, $v := .APIServerExtraArgs }}
+        - --{{ $k }}="{{ $v }}"
+        {{- end }}
         env:
         - name: POD_IP
           valueFrom:
@@ -490,6 +493,9 @@ spec:
         - --root-ca-file=/etc/kubernetes/secrets/ca.crt
         - --service-account-private-key-file=/etc/kubernetes/secrets/service-account.key
         - --profiling=false
+        {{- range $k, $v := .ControllerManagerExtraArgs }}
+        - --{{ $k }}="{{ $v }}"
+        {{- end }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -633,6 +639,9 @@ spec:
         - kube-scheduler
         - --leader-elect=true
         - --profiling=false
+        {{- range $k, $v := .SchedulerExtraArgs }}
+        - --{{ $k }}="{{ $v }}"
+        {{- end }}
         livenessProbe:
           httpGet:
             path: /healthz
