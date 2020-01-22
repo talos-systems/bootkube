@@ -525,6 +525,10 @@ spec:
         hostPath:
           path: /etc/ssl/certs
       dnsPolicy: ClusterFirstWithHostNet
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
 `)
 
 var ControllerManagerServiceAccount = []byte(`apiVersion: v1
@@ -644,6 +648,10 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
 `)
 
 var BootstrapSchedulerTemplate = []byte(`apiVersion: v1
