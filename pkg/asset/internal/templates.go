@@ -208,7 +208,7 @@ spec:
         - --tls-private-key-file=/etc/kubernetes/secrets/apiserver.key
         - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
         {{- range $k, $v := .APIServerExtraArgs }}
-        - --{{ $k }}="{{ $v }}"
+        - --{{ $k }}={{ $v }}
         {{- end }}
         env:
         - name: POD_IP
@@ -494,7 +494,7 @@ spec:
         - --service-account-private-key-file=/etc/kubernetes/secrets/service-account.key
         - --profiling=false
         {{- range $k, $v := .ControllerManagerExtraArgs }}
-        - --{{ $k }}="{{ $v }}"
+        - --{{ $k }}={{ $v }}
         {{- end }}
         livenessProbe:
           httpGet:
@@ -640,7 +640,7 @@ spec:
         - --leader-elect=true
         - --profiling=false
         {{- range $k, $v := .SchedulerExtraArgs }}
-        - --{{ $k }}="{{ $v }}"
+        - --{{ $k }}={{ $v }}
         {{- end }}
         livenessProbe:
           httpGet:
