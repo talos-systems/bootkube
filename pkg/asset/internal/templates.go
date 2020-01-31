@@ -293,6 +293,9 @@ spec:
     - --audit-log-maxbackup=3
     - --audit-log-maxsize=50
     - --profiling=false
+    {{- range $k, $v := .APIServerExtraArgs }}
+    - --{{ $k }}={{ $v }}
+    {{- end }}
     env:
     - name: POD_IP
       valueFrom:
@@ -582,6 +585,9 @@ spec:
     - --root-ca-file=/etc/kubernetes/secrets/ca.crt
     - --service-account-private-key-file=/etc/kubernetes/secrets/service-account.key
     - --profiling=false
+    {{- range $k, $v := .ControllerManagerExtraArgs }}
+    - --{{ $k }}={{ $v }}
+    {{- end }}
     volumeMounts:
     - name: secrets
       mountPath: /etc/kubernetes/secrets
@@ -678,6 +684,9 @@ spec:
     - --kubeconfig=/etc/kubernetes/secrets/kubeconfig
     - --leader-elect=true
     - --profiling=false
+    {{- range $k, $v := .SchedulerExtraArgs }}
+    - --{{ $k }}={{ $v }}
+    {{- end }}
     volumeMounts:
     - name: secrets
       mountPath: /etc/kubernetes/secrets
