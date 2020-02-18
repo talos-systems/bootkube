@@ -173,7 +173,7 @@ spec:
         - --allow-privileged=true
         - --anonymous-auth=false
         - --authorization-mode=Node,RBAC
-        - --bind-address=0.0.0.0
+        - --bind-address={{ .BindAllAddress }}
         - --client-ca-file=/etc/kubernetes/secrets/ca.crt
         - --requestheader-client-ca-file=/etc/kubernetes/secrets/front-proxy-ca.crt
         - --requestheader-allowed-names=front-proxy-client
@@ -203,7 +203,7 @@ spec:
         - --kubelet-client-key=/etc/kubernetes/secrets/apiserver-kubelet-client.key
         - --secure-port={{ .LocalAPIServerPort }}
         - --service-account-key-file=/etc/kubernetes/secrets/service-account.pub
-        - --service-cluster-ip-range={{ .ServiceCIDR }}
+        - --service-cluster-ip-range={{ .ServiceCIDRsString }}
         - --tls-cert-file=/etc/kubernetes/secrets/apiserver.crt
         - --tls-private-key-file=/etc/kubernetes/secrets/apiserver.key
         - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
@@ -260,7 +260,7 @@ spec:
     - --advertise-address=$(POD_IP)
     - --allow-privileged=true
     - --authorization-mode=Node,RBAC
-    - --bind-address=0.0.0.0
+    - --bind-address={{ .BindAllAddress }}
     - --client-ca-file=/etc/kubernetes/secrets/ca.crt
     - --requestheader-client-ca-file=/etc/kubernetes/secrets/front-proxy-ca.crt
     - --requestheader-allowed-names=front-proxy-client
@@ -281,7 +281,7 @@ spec:
     - --kubelet-client-key=/etc/kubernetes/secrets/apiserver-kubelet-client.key
     - --secure-port={{ .LocalAPIServerPort }}
     - --service-account-key-file=/etc/kubernetes/secrets/service-account.pub
-    - --service-cluster-ip-range={{ .ServiceCIDR }}
+    - --service-cluster-ip-range={{ .ServiceCIDRsString }}
     - --cloud-provider={{ .CloudProvider }}
     - --tls-cert-file=/etc/kubernetes/secrets/apiserver.crt
     - --tls-private-key-file=/etc/kubernetes/secrets/apiserver.key
@@ -487,8 +487,8 @@ spec:
         - --use-service-account-credentials
         - --allocate-node-cidrs=true
         - --cloud-provider={{ .CloudProvider }}
-        - --cluster-cidr={{ .PodCIDR }}
-        - --service-cluster-ip-range={{ .ServiceCIDR }}
+        - --cluster-cidr={{ .PodCIDRsString }}
+        - --service-cluster-ip-range={{ .ServiceCIDRsString }}
         - --cluster-signing-cert-file=/etc/kubernetes/secrets/ca.crt
         - --cluster-signing-key-file=/etc/kubernetes/secrets/ca.key
         - --configure-cloud-routes=false
@@ -574,8 +574,8 @@ spec:
     - ./hyperkube
     - kube-controller-manager
     - --allocate-node-cidrs=true
-    - --cluster-cidr={{ .PodCIDR }}
-    - --service-cluster-ip-range={{ .ServiceCIDR }}
+    - --cluster-cidr={{ .PodCIDRsString }}
+    - --service-cluster-ip-range={{ .ServiceCIDRsString }}
     - --cloud-provider={{ .CloudProvider }}
     - --cluster-signing-cert-file=/etc/kubernetes/secrets/ca.crt
     - --cluster-signing-key-file=/etc/kubernetes/secrets/ca.key
@@ -736,7 +736,7 @@ spec:
         command:
         - ./hyperkube
         - kube-proxy
-        - --cluster-cidr={{ .PodCIDR }}
+        - --cluster-cidr={{ .PodCIDRsString }}
         - --hostname-override=$(NODE_NAME)
         - --kubeconfig=/etc/kubernetes/kubeconfig
         - --proxy-mode=iptables
@@ -1024,7 +1024,7 @@ metadata:
 spec:
   selector:
     k8s-app: kube-dns
-  clusterIP: {{ .DNSServiceIP }}
+  clusterIP: {{ index .DNSServiceIPsString 0 }}
   ports:
     - name: dns
       port: 53
