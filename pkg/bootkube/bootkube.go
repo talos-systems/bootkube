@@ -67,6 +67,11 @@ func (b *bootkube) Run() error {
 		return err
 	}
 
+	c, err := kubeConfig.RawConfig()
+	cton := c.Contexts[c.CurrentContext]
+	cl := c.Clusters[cton.Cluster]
+	cl.Server = "https://127.0.0.1:6443"
+
 	if err = WaitUntilPodsRunning(kubeConfig, b.requiredPods, assetTimeout); err != nil {
 		return err
 	}
