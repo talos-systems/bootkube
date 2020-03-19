@@ -891,7 +891,7 @@ data:
         log . {
             class error
         }
-        kubernetes cluster.local in-addr.arpa ip6.arpa {
+        kubernetes {{ .ClusterDomain }} in-addr.arpa ip6.arpa {
             pods insecure
             fallthrough in-addr.arpa ip6.arpa
         }
