@@ -48,6 +48,7 @@ var (
 		serviceCIDR          string
 		cloudProvider        string
 		networkProvider      string
+		clusterDomain        string
 	}
 
 	imageVersions = asset.DefaultImages
@@ -68,6 +69,8 @@ func init() {
 	cmdRender.Flags().StringVar(&renderOpts.serviceCIDR, "service-cidr", "10.3.0.0/24", "The CIDR range of cluster services.")
 	cmdRender.Flags().StringVar(&renderOpts.cloudProvider, "cloud-provider", "", "The provider for cloud services.  Empty string for no provider")
 	cmdRender.Flags().StringVar(&renderOpts.networkProvider, "network-provider", "flannel", "CNI network provider (flannel, experimental-canal or experimental-calico).")
+	cmdRender.Flags().StringVar(&renderOpts.clusterDomain, "cluster-domain", "cluster.local", "The domain for a given cluster")
+
 }
 
 func runCmdRender(cmd *cobra.Command, args []string) error {
@@ -214,6 +217,7 @@ func flagsToAssetConfig() (c *asset.Config, err error) {
 		CloudProvider:        renderOpts.cloudProvider,
 		NetworkProvider:      renderOpts.networkProvider,
 		Images:               imageVersions,
+		ClusterDomain:        renderOpts.clusterDomain,
 	}, nil
 }
 

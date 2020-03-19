@@ -124,6 +124,7 @@ type Config struct {
 	CACert                     *x509.Certificate
 	CAPrivKey                  *rsa.PrivateKey
 	AltNames                   *tlsutil.AltNames
+	ClusterDomain              string
 	PodCIDR                    *net.IPNet
 	ServiceCIDR                *net.IPNet
 	APIServiceIP               net.IP
@@ -161,6 +162,9 @@ func NewDefaultAssets(conf Config) (Assets, error) {
 
 	// Add kube-apiserver service IP
 	conf.AltNames.IPs = append(conf.AltNames.IPs, conf.APIServiceIP)
+
+	// Add kubernetes default svc with cluster domain to AltNames
+	conf.AltNames.DNSNames = append(conf.AltNames.DNSNames, "kubernetes.default.svc."+conf.ClusterDomain)
 
 	// Create a CA if none was provided.
 	if conf.CACert == nil {
