@@ -1,6 +1,7 @@
 package bootkube
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -26,7 +27,11 @@ func WaitUntilPodsRunning(c clientcmd.ClientConfig, pods []string, timeout time.
 	if err != nil {
 		return err
 	}
-	sc.Run()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sc.Run(ctx)
 
 	if err := wait.Poll(5*time.Second, timeout, sc.AllRunning); err != nil {
 		return fmt.Errorf("error while checking pod status: %v", err)
@@ -57,13 +62,13 @@ func NewStatusController(c clientcmd.ClientConfig, pods []string) (*statusContro
 	return &statusController{client: client, watchPods: pods}, nil
 }
 
-func (s *statusController) Run() {
+func (s *statusController) Run(ctx context.Context) {
 	// TODO: launch a separate watcher for each component?
-	s.podWatcher()
-	s.nodeWatcher()
+	s.podWatcher(ctx)
+	s.nodeWatcher(ctx)
 }
 
-func (s *statusController) podWatcher() {
+func (s *statusController) podWatcher(ctx context.Context) {
 	// TODO(yifan): Be more explicit about the labels so that we don't just
 	// reply on the prefix of the pod name when looking for the pods we are interested.
 	// E.g. For a scheduler pod, we will look for pods that has label `tier=control-plane`
@@ -84,11 +89,10 @@ func (s *statusController) podWatcher() {
 	)
 
 	s.podStore = podStore
-
-	go podController.Run(wait.NeverStop)
+	go podController.Run(ctx.Done())
 }
 
-func (s *statusController) nodeWatcher() {
+func (s *statusController) nodeWatcher(ctx context.Context) {
 	options := metav1.ListOptions{}
 
 	nodeStore, nodeController := cache.NewInformer(
@@ -107,7 +111,7 @@ func (s *statusController) nodeWatcher() {
 
 	s.nodeStore = nodeStore
 
-	go nodeController.Run(wait.NeverStop)
+	go nodeController.Run(ctx.Done())
 }
 
 // Why do we return bool error but never return error?
