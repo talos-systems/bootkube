@@ -77,10 +77,10 @@ func (s *statusController) podWatcher(ctx context.Context) {
 	podStore, podController := cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(lo metav1.ListOptions) (runtime.Object, error) {
-				return s.client.CoreV1().Pods("").List(options)
+				return s.client.CoreV1().Pods("").List(ctx, options)
 			},
 			WatchFunc: func(lo metav1.ListOptions) (watch.Interface, error) {
-				return s.client.CoreV1().Pods("").Watch(options)
+				return s.client.CoreV1().Pods("").Watch(ctx, options)
 			},
 		},
 		&corev1.Pod{},
@@ -98,10 +98,10 @@ func (s *statusController) nodeWatcher(ctx context.Context) {
 	nodeStore, nodeController := cache.NewInformer(
 		&cache.ListWatch{
 			ListFunc: func(lo metav1.ListOptions) (runtime.Object, error) {
-				return s.client.CoreV1().Nodes().List(options)
+				return s.client.CoreV1().Nodes().List(ctx, options)
 			},
 			WatchFunc: func(lo metav1.ListOptions) (watch.Interface, error) {
-				return s.client.CoreV1().Nodes().Watch(options)
+				return s.client.CoreV1().Nodes().Watch(ctx, options)
 			},
 		},
 		&corev1.Node{},
